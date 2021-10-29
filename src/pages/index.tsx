@@ -1,19 +1,22 @@
-import { FormEventHandler, Fragment, useState } from "react"
+import { Fragment, useState } from "react"
 import { format } from "date-fns"
 import Link from "next/link"
 import { Dialog, Transition } from "@headlessui/react"
-import { HomeIcon, MenuIcon, UsersIcon, XIcon } from "@heroicons/react/outline"
+import { MenuIcon, XIcon } from "@heroicons/react/outline"
 import type { NextPage } from "next"
 import { BtcDollarPrice } from "../components/BtcDollarPrice"
 import DataTable, { TableColumn } from "react-data-table-component"
 
 type WalletDataType = {
-  address: string
-  txs: {
-    value: string
-    confirmations: number
-    time: number
-  }[]
+  status: string
+  data: {
+    address: string
+    txs: {
+      value: string
+      confirmations: number
+      time: number
+    }[]
+  }
 }
 
 type DataRow = {
@@ -48,20 +51,6 @@ const paginationComponentOptions = {
   selectAllRowsItemText: "Todos",
 }
 
-function classNames(...classes: string[]) {
-  return classes.filter(Boolean).join(" ")
-}
-
-const navigation = [
-  { name: "Bitcoin", href: "/", icon: "/BTC_Logo.svg", current: true },
-  {
-    name: "Licoin",
-    href: "/litecoin",
-    icon: "/litecoin-ltc-logo.svg",
-    current: false,
-  },
-]
-
 const Home: NextPage = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -77,7 +66,7 @@ const Home: NextPage = () => {
           `https://chain.so/api/v2/get_tx_received/btc/${walletInput}`
         ).then((response) => response.json())
         setLoading(false)
-        setWalletData(walletData.data)
+        setWalletData(walletData)
       } catch (e) {
         console.log(e)
       }
@@ -225,7 +214,6 @@ const Home: NextPage = () => {
                 <BtcDollarPrice />
               </div>
               <div className="max-w-7xl flex flex-col mx-auto px-4 sm:px-6 md:px-8">
-                {/* Replace with your content */}
                 <div className="py-8 border-t border-gray-300 mt-4">
                   <form
                     className="flex items-end"
@@ -251,23 +239,31 @@ const Home: NextPage = () => {
                 </div>
 
                 <div>
-                  <h2 className="text-lg text-gray-600">
-                    Histórico de Transações
-                  </h2>
                   <p>{loading ? "Carregando..." : ""}</p>
-                  <p>{walletData ? walletData.address : ""}</p>
+                  {walletData ? (
+                    walletData.status === "fail" ? (
+                      "Endereço não encontrado"
+                    ) : (
+                      <h2 className="text-lg text-gray-600">
+                        Histórico de Transações do endereço{" "}
+                        {walletData.data.address}
+                      </h2>
+                    )
+                  ) : (
+                    ""
+                  )}
                   {walletData ? (
                     <DataTable
                       columns={columns}
-                      data={walletData.txs}
+                      data={walletData.data.txs}
                       pagination
                       paginationComponentOptions={paginationComponentOptions}
+                      noDataComponent="Não há dados para serem exibidos"
                     />
                   ) : (
                     ""
                   )}
                 </div>
-                {/* /End replace */}
               </div>
             </div>
           </main>

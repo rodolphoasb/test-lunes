@@ -1,32 +1,55 @@
-import { FormEventHandler, Fragment, useState } from "react"
+import { Fragment, useState } from "react"
+import { format } from "date-fns"
 import Link from "next/link"
 import { Dialog, Transition } from "@headlessui/react"
-import { HomeIcon, MenuIcon, UsersIcon, XIcon } from "@heroicons/react/outline"
+import { MenuIcon, XIcon } from "@heroicons/react/outline"
 import type { NextPage } from "next"
+import DataTable, { TableColumn } from "react-data-table-component"
 import { LtcDollarPrice } from "../components/LtcDollarPrice"
 
 type WalletDataType = {
-  address: string
-  txs: {
-    value: string
-    confirmations: number
-    time: number
-  }[]
+  status: string
+  data: {
+    address: string
+    txs: {
+      value: string
+      confirmations: number
+      time: number
+    }[]
+  }
 }
 
-function classNames(...classes: string[]) {
-  return classes.filter(Boolean).join(" ")
+type DataRow = {
+  value: string
+  confirmations: number
+  time: number
 }
 
-const navigation = [
-  { name: "Bitcoin", href: "/", icon: "/BTC_Logo.svg", current: true },
+const columns: TableColumn<DataRow>[] = [
   {
-    name: "Litecoin",
-    href: "/litecoin",
-    icon: "/litecoin-ltc-logo.svg",
-    current: false,
+    name: "Valor",
+    selector: (row) => row.value,
+    sortable: true,
+  },
+  {
+    name: "Confirmações",
+    selector: (row) => row.confirmations,
+    sortable: true,
+  },
+  {
+    name: "Data",
+    selector: (row) => row.time,
+    cell: (row) => format(new Date(row.time * 1000), "dd/MM/yyyy"),
+    sortable: true,
   },
 ]
+
+const paginationComponentOptions = {
+  rowsPerPageText: "Resultados por página",
+  rangeSeparatorText: "de",
+  selectAllRowsItem: true,
+  selectAllRowsItemText: "Todos",
+}
 
 const Litecoin: NextPage = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -43,7 +66,7 @@ const Litecoin: NextPage = () => {
           `https://chain.so/api/v2/get_tx_received/ltc/${walletInput}`
         ).then((response) => response.json())
         setLoading(false)
-        setWalletData(walletData.data)
+        setWalletData(walletData)
       } catch (e) {
         console.log(e)
       }
@@ -191,7 +214,6 @@ const Litecoin: NextPage = () => {
                 <LtcDollarPrice />
               </div>
               <div className="max-w-7xl flex flex-col mx-auto px-4 sm:px-6 md:px-8">
-                {/* Replace with your content */}
                 <div className="py-8 border-t border-gray-300 mt-4">
                   <form
                     className="flex items-end"
@@ -217,13 +239,31 @@ const Litecoin: NextPage = () => {
                 </div>
 
                 <div>
-                  <h2 className="text-lg text-gray-600">
-                    Histórico de Transações
-                  </h2>
                   <p>{loading ? "Carregando..." : ""}</p>
-                  <p>{walletData ? walletData.address : ""}</p>
+                  {walletData ? (
+                    walletData.status === "fail" ? (
+                      "Endereço não encontrado"
+                    ) : (
+                      <h2 className="text-lg text-gray-600">
+                        Histórico de Transações do endereço{" "}
+                        {walletData.data.address}
+                      </h2>
+                    )
+                  ) : (
+                    ""
+                  )}
+                  {walletData ? (
+                    <DataTable
+                      columns={columns}
+                      data={walletData.data.txs}
+                      pagination
+                      paginationComponentOptions={paginationComponentOptions}
+                      noDataComponent="Não há dados para serem exibidos"
+                    />
+                  ) : (
+                    ""
+                  )}
                 </div>
-                {/* /End replace */}
               </div>
             </div>
           </main>
