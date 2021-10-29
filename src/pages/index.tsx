@@ -1,9 +1,52 @@
-import { Fragment, useState } from "react"
+import { FormEventHandler, Fragment, useState } from "react"
+import { format } from "date-fns"
 import Link from "next/link"
 import { Dialog, Transition } from "@headlessui/react"
 import { HomeIcon, MenuIcon, UsersIcon, XIcon } from "@heroicons/react/outline"
 import type { NextPage } from "next"
-import useSWR from "swr"
+import { BtcDollarPrice } from "../components/BtcDollarPrice"
+import DataTable, { TableColumn } from "react-data-table-component"
+
+type WalletDataType = {
+  address: string
+  txs: {
+    value: string
+    confirmations: number
+    time: number
+  }[]
+}
+
+type DataRow = {
+  value: string
+  confirmations: number
+  time: number
+}
+
+const columns: TableColumn<DataRow>[] = [
+  {
+    name: "Valor",
+    selector: (row) => row.value,
+    sortable: true,
+  },
+  {
+    name: "Confirmações",
+    selector: (row) => row.confirmations,
+    sortable: true,
+  },
+  {
+    name: "Data",
+    selector: (row) => row.time,
+    cell: (row) => format(new Date(row.time * 1000), "dd/MM/yyyy"),
+    sortable: true,
+  },
+]
+
+const paginationComponentOptions = {
+  rowsPerPageText: "Resultados por página",
+  rangeSeparatorText: "de",
+  selectAllRowsItem: true,
+  selectAllRowsItemText: "Todos",
+}
 
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(" ")
@@ -19,21 +62,28 @@ const navigation = [
   },
 ]
 
-const fetcher = (url: string) => fetch(url).then((res) => res.json())
-
 const Home: NextPage = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const { data, error } = useSWR(
-    "https://chain.so/api/v2/get_price/btc/USD",
-    fetcher
-  )
+  const [loading, setLoading] = useState(false)
+  const [walletInput, setWalletInput] = useState("")
+  const [walletData, setWalletData] = useState<WalletDataType | null>(null)
 
-  if (error) return <div>Falha ao carregar</div>
-  if (!data) return <div>Carregando...</div>
-  const price = data.data.prices.filter(
-    (obj: { exchange: string }) => obj.exchange === "bitfinex"
-  )[0].price
-  // render data
+  async function handleWalletSubmit(e: React.SyntheticEvent) {
+    if (walletInput.length > 0) {
+      e.preventDefault()
+      setLoading(true)
+      try {
+        const walletData = await fetch(
+          `https://chain.so/api/v2/get_tx_received/btc/${walletInput}`
+        ).then((response) => response.json())
+        setLoading(false)
+        setWalletData(walletData.data)
+      } catch (e) {
+        console.log(e)
+      }
+    }
+  }
+
   return (
     <>
       <div>
@@ -91,21 +141,27 @@ const Home: NextPage = () => {
                   <div className="flex-shrink-0 flex items-center px-4 justify-center text-white font-bold text-2xl">
                     <h2>RBravo</h2>
                   </div>
-                  <nav className="mt-5 px-2 space-y-1">
-                    {navigation.map((item) => (
-                      <Link key={item.name} href={item.href} passHref>
-                        <a
-                          className={classNames(
-                            item.current
-                              ? "bg-gray-900 text-white"
-                              : "text-gray-300 hover:bg-gray-700 hover:text-white",
-                            "group flex items-center px-2 py-2 text-base font-medium rounded-md"
-                          )}
-                        ></a>
-                        <img className="h-6 w-6 mr-8" src={item.icon} alt="" />
-                        {item.name}
-                      </Link>
-                    ))}
+                  <nav className="mt-8 flex-1 px-4 space-y-4">
+                    <Link href="/" passHref>
+                      <a className="flex text-white font-medium">
+                        <img
+                          className="h-6 w-6 mr-8"
+                          src="/BTC_Logo.svg"
+                          alt="Bitcoin logo"
+                        />
+                        Bitcoin
+                      </a>
+                    </Link>
+                    <Link href="/litecoin" passHref>
+                      <a className="flex text-white font-medium">
+                        <img
+                          className="h-6 w-6 mr-8"
+                          src="/litecoin-ltc-logo.svg"
+                          alt="Litecoin logo"
+                        />
+                        Litecoin
+                      </a>
+                    </Link>
                   </nav>
                 </div>
               </div>
@@ -124,22 +180,27 @@ const Home: NextPage = () => {
               <div className="flex items-center flex-shrink-0 px-4 justify-center text-white font-bold text-2xl">
                 RBravo
               </div>
-              <nav className="mt-5 flex-1 px-2 space-y-1">
-                {navigation.map((item) => (
-                  <a
-                    key={item.name}
-                    href={item.href}
-                    className={classNames(
-                      item.current
-                        ? "bg-gray-900 text-white"
-                        : "text-gray-300 hover:bg-gray-700 hover:text-white",
-                      "group flex items-center px-2 py-2 text-sm font-medium rounded-md"
-                    )}
-                  >
-                    <img className="h-6 w-6 mr-8" src={item.icon} alt="" />
-                    {item.name}
+              <nav className="mt-8 flex-1 px-4 space-y-4">
+                <Link href="/" passHref>
+                  <a className="flex text-white font-medium">
+                    <img
+                      className="h-6 w-6 mr-8"
+                      src="/BTC_Logo.svg"
+                      alt="Bitcoin logo"
+                    />
+                    Bitcoin
                   </a>
-                ))}
+                </Link>
+                <Link href="/litecoin" passHref>
+                  <a className="flex text-white font-medium">
+                    <img
+                      className="h-6 w-6 mr-8"
+                      src="/litecoin-ltc-logo.svg"
+                      alt="Litecoin logo"
+                    />
+                    Litecoin
+                  </a>
+                </Link>
               </nav>
             </div>
           </div>
@@ -161,18 +222,15 @@ const Home: NextPage = () => {
                 <h1 className="text-2xl font-semibold text-yellow-500">
                   Bitcoin
                 </h1>
-                <p className="text-xl">
-                  Cotação:{" "}
-                  {new Intl.NumberFormat("en-us", {
-                    style: "currency",
-                    currency: "USD",
-                  }).format(price)}
-                </p>
+                <BtcDollarPrice />
               </div>
               <div className="max-w-7xl flex flex-col mx-auto px-4 sm:px-6 md:px-8">
                 {/* Replace with your content */}
                 <div className="py-8 border-t border-gray-300 mt-4">
-                  <form className="flex items-end">
+                  <form
+                    className="flex items-end"
+                    onSubmit={handleWalletSubmit}
+                  >
                     <div className="w-1/4 mr-8">
                       <label
                         className="text-lg font-bold text-gray-600"
@@ -181,6 +239,7 @@ const Home: NextPage = () => {
                         1. Endereço da Carteira
                       </label>
                       <input
+                        onChange={(e) => setWalletInput(e.currentTarget.value)}
                         type="text"
                         className="shadow-sm focus:ring-gray-500 focus:border-gray-500 block w-full sm:text-sm border-gray-300 rounded-md"
                       />
@@ -195,6 +254,18 @@ const Home: NextPage = () => {
                   <h2 className="text-lg text-gray-600">
                     Histórico de Transações
                   </h2>
+                  <p>{loading ? "Carregando..." : ""}</p>
+                  <p>{walletData ? walletData.address : ""}</p>
+                  {walletData ? (
+                    <DataTable
+                      columns={columns}
+                      data={walletData.txs}
+                      pagination
+                      paginationComponentOptions={paginationComponentOptions}
+                    />
+                  ) : (
+                    ""
+                  )}
                 </div>
                 {/* /End replace */}
               </div>
