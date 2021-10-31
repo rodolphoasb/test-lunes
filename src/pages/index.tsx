@@ -6,6 +6,7 @@ import { MenuIcon, XIcon } from "@heroicons/react/outline"
 import type { NextPage } from "next"
 import { BtcDollarPrice } from "../components/BtcDollarPrice"
 import DataTable, { TableColumn } from "react-data-table-component"
+import { NextSeo } from "next-seo"
 
 type WalletDataType = {
   status: string
@@ -75,6 +76,10 @@ const Home: NextPage = () => {
 
   return (
     <>
+      <NextSeo
+        title="Bitcoin"
+        description="See the Bitcoin price in real time and wallet transactions"
+      />
       <div>
         <Transition.Root show={sidebarOpen} as={Fragment}>
           <Dialog
