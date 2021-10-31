@@ -207,12 +207,15 @@ const Litecoin: NextPage = () => {
           </div>
           <main className="flex-1">
             <div className="py-6">
+              {/* Page Header */}
               <div className="max-w-7xl flex items-center justify-between mx-auto px-4 sm:px-6 lg:px-8">
                 <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-500 to-blue-600 text-transparent bg-clip-text">
                   Litecoin
                 </h1>
                 <LtcDollarPrice />
               </div>
+              {/* End of Page Header */}
+              {/* Start of Page Body */}
               <div className="max-w-7xl flex flex-col mx-auto px-4 sm:px-6 md:px-8">
                 <div className="py-8 border-t border-gray-300 mt-4">
                   <form
@@ -265,6 +268,7 @@ const Litecoin: NextPage = () => {
                   )}
                 </div>
               </div>
+              {/* End of Page Body */}
             </div>
           </main>
         </div>
